@@ -1,0 +1,44 @@
+﻿{
+  "categories": [
+    {
+      "name": "animals",
+      "words": [
+        {"word": "cat", "hint": "They say it has 9 lives"},
+        {"word": "lion", "hint": "The king of beasts"},
+        {"word": "monkey", "hint": "A big fan of bananas"},
+        {"word": "parrot", "hint": "Repeats whatever others say"},
+        {"word": "dog", "hint": "A descendant of the wolf"}
+      ]
+    },
+    {
+      "name": "countries",
+      "words": [
+        {"word": "russia", "hint": "The largest country in the world"},
+        {"word": "germany", "hint": "The manufacturer of Mercedes-Benz"},
+        {"word": "france", "hint": "The country of the Eiffel Tower"},
+        {"word": "japan", "hint": "The land of the rising sun"},
+        {"word": "brazil", "hint": "The country of carnivals"}
+      ]
+    },
+    {
+      "name": "nature",
+      "words": [
+        {"word": "forest", "hint": "A large area covered with trees"},
+        {"word": "river", "hint": "A natural flowing stream of water"},
+        {"word": "mountain", "hint": "A very high hill with steep sides"},
+        {"word": "lake", "hint": "A large body of fresh water surrounded by land"},
+        {"word": "desert", "hint": "A barren area with very little water and plants"}
+      ]
+    },
+    {
+      "name": "food",
+      "words": [
+        {"word": "pizza", "hint": "Teenage Mutant Ninja Turtles absolutely loved this fast food"},
+        {"word": "sushi", "hint": "A Japanese dish made of rice and raw fish"},
+        {"word": "salad", "hint": "A dish consisting of mixed ingredients"},
+        {"word": "soup", "hint": "A liquid hot dish served as a meal"},
+        {"word": "dessert", "hint": "A sweet conclusion to a meal"}
+      ]
+    }
+  ]
+}

@@ -1,28 +1,34 @@
-﻿package main
+package main
 
 import (
 	"errors"
 	"fmt"
-	"hangman/internal/game"
-	"hangman/internal/mode"
-	"hangman/internal/repo"
+	"hangman/internal/app/mode"
+	"hangman/internal/domain/ctg"
+	"hangman/internal/domain/dict"
+	"hangman/internal/domain/diff"
+	"hangman/internal/domain/session"
+	"hangman/internal/domain/words"
+	"hangman/internal/infra/repo"
+	"hangman/internal/ui"
+	"math/rand/v2"
 	"os"
 
 	"github.com/alexflint/go-arg"
 )
 
+// Args holds the command-line arguments configuration for the application.
 type Args struct {
-	Words      game.Words      `arg:"positional" placeholder:"<word>" help:"Words pair for testing mode"`
-	Category   game.Category   `arg:"-C,--category" help:"Category for the word"`
-	Difficulty game.Difficulty `arg:"-D,--difficulty" help:"Difficulty: EASY, MEDIUM or HARD"`
+	Words      words.Words     `arg:"positional" placeholder:"<word>" help:"word pair for non interactive mode"`
+	Category   ctg.Category    `arg:"-C,--category" help:"category for the word"`
+	Difficulty diff.Difficulty `arg:"-D,--difficulty" help:"difficulty: easy, medium or hard"`
 }
 
-func (a Args) Validate() error {
+func (a Args) validate() error {
 	if !a.Words.IsEmpty() &&
-		(a.Category != game.RandomCategory || a.Difficulty != game.RandomDifficulty) {
+		(a.Category != ctg.RandomCategory || a.Difficulty != diff.RandomDifficulty) {
 		return errors.New("cannot use flags (--category, --difficulty) in non interactive mode")
 	}
-
 	return nil
 }
 
@@ -30,51 +36,62 @@ func main() {
 	var args Args
 	arg.MustParse(&args)
 
-	if err := args.Validate(); err != nil {
-		fmt.Printf("Usage error: %v\n", err)
+	if err := args.validate(); err != nil {
+		fmt.Printf("usage error: %v\n", err)
 		os.Exit(1)
 	}
 
 	if err := run(args); err != nil {
-		fmt.Printf("Runtime error: %v\n", err)
+		fmt.Printf("runtime error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
 func run(args Args) error {
+	states := ui.Load()
+	consoleUI := ui.New(os.Stdin, os.Stdout, states)
+
 	var gm mode.Mode
 
+	// non interactive mode
 	if !args.Words.IsEmpty() {
-		session, err := game.NewSession(args.Words.Hidden(), len(args.Words.Guessed()))
+		sess, err := session.NewSession(
+			args.Words.GetHidden(),
+			len(args.Words.GetGuessed()),
+		)
 		if err != nil {
 			return fmt.Errorf("failed to create session: %w", err)
 		}
 
-		gm = mode.NewNonInteractive(session, args.Words.Guessed())
-	} else {
-		r, err := repo.New()
-		if err != nil {
-			return fmt.Errorf("failed to init repo: %w", err)
-		}
-
-		var ctg repo.Category
-		if args.Category != game.RandomCategory {
-			ctg, err = r.Category(args.Category)
-			if err != nil {
-				return fmt.Errorf("failed to get category: %w", err)
-			}
-		} else {
-			ctg = r.RandomCategory()
-		}
-
-		hidden := r.RandomWord(ctg).Word
-		session, err := game.NewSession(hidden, args.Difficulty.MaxAttempts())
-		if err != nil {
-			return fmt.Errorf("failed to create session: %w", err)
-		}
-
-		gm = mode.NewInteractive(session)
+		gm = mode.NewNonInteractive(sess, args.Words.GetGuessed(), consoleUI)
+		return gm.Run()
 	}
 
+	// interactive mode
+	categories := repo.Load()
+	dictionaryRepository := repo.NewJsonDictRepository(categories)
+
+	cryptoRand := rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64()))
+	wordSelector := dict.NewWordSelector(dictionaryRepository, cryptoRand)
+	selectedCategory := wordSelector.RandomCategory()
+
+	if args.Category != ctg.RandomCategory {
+		if category, ok := dictionaryRepository.Category(args.Category); ok {
+			selectedCategory = category
+		}
+	}
+
+	selectedWord := wordSelector.RandomWordFromCategory(selectedCategory)
+	sess, err := session.NewSession(
+		selectedWord.Word,
+		args.Difficulty.GetMaxAttempts(),
+		session.WithHint(selectedWord.Hint),
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to create session: %w", err)
+	}
+
+	gm = mode.NewInteractive(sess, consoleUI)
 	return gm.Run()
 }
