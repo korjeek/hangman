@@ -39,16 +39,3 @@ A console-based implementation of the classic **Hangman** game written in Go (Go
    ```bash
    go run cmd/hangman/main.go "secretword" "aeiou"
    ```
-
-### Testing & Code Coverage
-To run the test suite and verify the code coverage statistics, execute the following commands in your terminal:
-```bash
-# Generate interface mocks
-go generate ./...
-
-# Run tests and save the coverage profile
-go test -coverprofile="coverage.out" ./...
-
-# View detailed code coverage breakdown in your browser
-go tool cover -html="coverage.out"
-```
