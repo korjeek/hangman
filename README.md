@@ -1,6 +1,7 @@
 # Hangman Game / Игра "Виселица"
 
-[English Version](#english-version) | [Русская версия](#русская-версия)
+[![en](https://shields.io)](#english-version)
+[![ru](https://shields.io)](#русская-версия)
 
 ---
 
